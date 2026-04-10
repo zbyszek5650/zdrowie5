@@ -1,29 +1,15 @@
 import streamlit as st
 import pandas as pd
 
-# Aktywacja Dark Mode (wymaga ustawienia w konfiguracji Streamlit, ale tutaj symulujemy to przez CSS i odpowiednie formatowanie)
-st.set_page_config(page_title="Sztab Kryzysowy", layout="wide", page_icon="🚨")
+# Konfiguracja strony
+st.set_page_config(page_title="Sztab Kryzysowy - Szpital", layout="wide", page_icon="🚨")
 
 # --- CUSTOM CSS DLA DARK MODE I KART KPI ---
 st.markdown("""
     <style>
-    /* Ukrycie standardowego górnego paska i stopki */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* Stylizacja sekcji nagłówka i przycisku */
-    .header-bar {
-        background-color: #1E1E1E;
-        padding: 15px;
-        border-radius: 8px;
-        border-bottom: 2px solid #333;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    
-    /* Stylizacja Kart KPI */
     .kpi-container {
         display: flex;
         justify-content: space-between;
@@ -65,7 +51,6 @@ st.markdown("""
         height: 100%;
     }
     
-    /* Stylizacja Sekcji Raportu Sytuacyjnego */
     .sitrep-box {
         background-color: #1A202C;
         border-left: 5px solid #3182CE;
@@ -83,7 +68,6 @@ st.markdown("""
         font-size: 14px;
     }
     
-    /* Stylizacja Alertów */
     .alert-box {
         background-color: #2D3748;
         border: 1px solid #DD6B20;
@@ -101,7 +85,6 @@ st.markdown("""
         gap: 5px;
     }
     
-    /* Stylizacja Sekcji Decyzyjnej */
     .decision-header {
         border-bottom: 2px solid #4A5568;
         padding-bottom: 10px;
@@ -126,89 +109,10 @@ state = get_game_state()
 # --- BAZA SCENARIUSZY (5 WARIANTÓW) ---
 ALL_SCENARIOS = {
     "Wariant A: Ransomware i paraliż HIS (3 Rundy)": {
-        1: {
-            "title": "🔴 FAZA OPERACYJNA: ETAP 1 - PIERWSZE SYMPTOMY INFEKCJI",
-            "desc": "Godzina 14:00. Lekarze na Szpitalnym Oddziale Ratunkowym (SOR) zgłaszają znaczne spowolnienie systemu HIS. Na komputerach w rejestracji pojawiły się **czarne ekrany**. Tłum w poczekalni gęstnieje.",
-            "questions": {
-                "IT": {
-                    "label": "ZESPÓŁ IT / CYBERBEZPIECZEŃSTWO:",
-                    "options": {
-                        "Natychmiastowe odcięcie SOR od głównej sieci (Prewencyjny Blackout)": {"pat": 0, "avl": -20, "fin": -5, "comp": +10},
-                        "Analiza logów w tle i zdalny restart stacji roboczych": {"pat": -10, "avl": +5, "fin": 0, "comp": -10},
-                    }
-                },
-                "Med": {
-                    "label": "PION MEDYCZNY:",
-                    "options": {
-                        "Wdrożenie procedury 'Downtime': pełne przejście na dokumentację papierową": {"pat": +15, "avl": 0, "fin": -5, "comp": +10},
-                        "Wstrzymanie wypisów i przyjęć planowych do czasu powrotu systemu": {"pat": -15, "avl": 0, "fin": -15, "comp": -5},
-                    }
-                },
-                "Dir": {
-                    "label": "SZTAB ZARZĄDZAJĄCY (DYREKCJA):",
-                    "options": {
-                        "Powiadomienie Centrum e-Zdrowia (CeZ) o potencjalnym zagrożeniu krytycznym": {"pat": 0, "avl": 0, "fin": 0, "comp": +15},
-                        "Brak eskalacji. Zespół czeka na wewnętrzną diagnozę techniczną": {"pat": 0, "avl": 0, "fin": 0, "comp": -15},
-                    }
-                }
-            }
-        },
-        2: {
-            "title": "🔴 FAZA OPERACYJNA: ETAP 2 - ŻĄDANIE OKUPU I STAN WYJĄTKOWY",
-            "desc": "Godzina 16:30. Diagnoza potwierdzona: atak Ransomware na bazy danych pacjentów. **Żądanie 50 Bitcoinów.** Brak wyników z laboratorium, brak dawek leków na oddziałach.",
-            "questions": {
-                "IT": {
-                    "label": "ZESPÓŁ IT / CYBERBEZPIECZEŃSTWO:",
-                    "options": {
-                        "Twardy reset i odcięcie zasilania serwerów, wezwanie CERT Polska": {"pat": -10, "avl": -30, "fin": -10, "comp": +25},
-                        "Próba odzyskania danych z porannych kopii bez zrywania połączeń sieciowych": {"pat": -25, "avl": -10, "fin": -20, "comp": -20},
-                    }
-                },
-                "Med": {
-                    "label": "PION MEDYCZNY:",
-                    "options": {
-                        "Przekierowanie karetek do innych placówek, wypisywanie pacjentów w stanie stabilnym": {"pat": +20, "avl": 0, "fin": -20, "comp": +10},
-                        "Próba kontynuacji leczenia 'na ślepo' bazując wyłącznie na wywiadzie ustnym": {"pat": -40, "avl": 0, "fin": 0, "comp": -30},
-                    }
-                },
-                "Dir": {
-                    "label": "SZTAB ZARZĄDZAJĄCY (DYREKCJA):",
-                    "options": {
-                        "Kategoryczna odmowa negocjacji. Powołanie sztabu kryzysowego z Policją": {"pat": 0, "avl": 0, "fin": +10, "comp": +20},
-                        "Nawiązanie tajnego kontaktu z napastnikami w celu sondowania negocjacji": {"pat": -10, "avl": 0, "fin": -40, "comp": -25},
-                    }
-                }
-            }
-        },
-        3: {
-            "title": "🔴 FAZA OPERACYJNA: ETAP 3 - REKONWALESCENCJA I KONTROLA",
-            "desc": "Dzień 3. Trwa powolne odtwarzanie środowiska informatycznego. Pod placówką parkują wozy transmisyjne. Do administracji zgłasza się kontrola z **Urzędu Ochrony Danych Osobowych (UODO)**.",
-            "questions": {
-                "IT": {
-                    "label": "ZESPÓŁ IT / ARCHITEKTURA:",
-                    "options": {
-                        "Odbudowa sieci od podstaw z wdrożeniem pełnej mikrosegmentacji (czasochłonne)": {"pat": +10, "avl": -15, "fin": -20, "comp": +20},
-                        "Szybkie łatanie luk i powrót do starej architektury w celu przywrócenia usług": {"pat": -20, "avl": +20, "fin": +10, "comp": -25},
-                    }
-                },
-                "Med": {
-                    "label": "PION PR I KOMUNIKACJI:",
-                    "options": {
-                        "Wydanie otwartego komunikatu o wycieku danych medycznych i start infolinii": {"pat": +10, "avl": 0, "fin": -10, "comp": +25},
-                        "Zasłanianie się tajemnicą śledztwa i konsekwentna odmowa komentarzy": {"pat": -10, "avl": 0, "fin": -20, "comp": -20},
-                    }
-                },
-                "Dir": {
-                    "label": "SZTAB ZARZĄDZAJĄCY (DYREKCJA):",
-                    "options": {
-                        "Organizacja pilnych szkoleń antyphishingowych dla całego personelu": {"pat": +15, "avl": -5, "fin": -10, "comp": +15},
-                        "Wstrzymanie szkoleń. Skupienie winy w mediach na zewnętrznym dostawcy antywirusa": {"pat": -15, "avl": 0, "fin": 0, "comp": -20},
-                    }
-                }
-            }
-        }
+        1: {"title": "🔴 FAZA OPERACYJNA: ETAP 1 - PIERWSZE SYMPTOMY", "desc": "Lekarze zgłaszają spowolnienie systemu HIS. Na komputerach pojawiły się czarne ekrany. Tłum pacjentów gęstnieje.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Natychmiastowe odcięcie SOR od sieci głównej (Blackout)": {"pat": 0, "avl": -20, "fin": -5, "comp": +10}, "Zdalny restart i analiza logów": {"pat": -10, "avl": +5, "fin": 0, "comp": -10}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Wdrożenie procedury 'Downtime' (dokumentacja papierowa)": {"pat": +15, "avl": 0, "fin": -5, "comp": +10}, "Wstrzymanie wypisów i przyjęć planowych": {"pat": -15, "avl": 0, "fin": -15, "comp": -5}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Powiadomienie Centrum e-Zdrowia (CeZ)": {"pat": 0, "avl": 0, "fin": 0, "comp": +15}, "Brak eskalacji, oczekiwanie na diagnozę": {"pat": 0, "avl": 0, "fin": 0, "comp": -15}}}}},
+        2: {"title": "🔴 FAZA OPERACYJNA: ETAP 2 - ŻĄDANIE OKUPU", "desc": "Potwierdzono atak Ransomware. Żądanie 50 Bitcoinów. Brak wyników laboratoryjnych i dawek leków.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Twardy reset, odcięcie zasilania, wezwanie CERT Polska": {"pat": -10, "avl": -30, "fin": -10, "comp": +25}, "Próba odzyskiwania danych online z kopii zapasowych": {"pat": -25, "avl": -10, "fin": -20, "comp": -20}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Przekierowanie karetek, wypisy stabilnych pacjentów": {"pat": +20, "avl": 0, "fin": -20, "comp": +10}, "Leczenie na ślepo bazując na wywiadzie z pacjentem": {"pat": -40, "avl": 0, "fin": 0, "comp": -30}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Odmowa negocjacji, powołanie sztabu z Policją": {"pat": 0, "avl": 0, "fin": +10, "comp": +20}, "Nawiązanie tajnego kontaktu z hakerami": {"pat": -10, "avl": 0, "fin": -40, "comp": -25}}}}},
+        3: {"title": "🔴 FAZA OPERACYJNA: ETAP 3 - KONTROLA", "desc": "Trwa powolne odtwarzanie środowiska. Przed budynkiem media, a do dyrekcji wkracza kontrola UODO.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Odbudowa sieci od podstaw z mikrosegmentacją": {"pat": +10, "avl": -15, "fin": -20, "comp": +20}, "Szybkie łatanie luk i powrót do starej architektury": {"pat": -20, "avl": +20, "fin": +10, "comp": -25}}}, "Med": {"label": "PION PR:", "options": {"Otwarty komunikat o wycieku danych, start infolinii": {"pat": +10, "avl": 0, "fin": -10, "comp": +25}, "Zasłanianie się tajemnicą śledztwa": {"pat": -10, "avl": 0, "fin": -20, "comp": -20}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Pilne szkolenia antyphishingowe dla personelu": {"pat": +15, "avl": -5, "fin": -10, "comp": +15}, "Skupienie winy na dostawcy antywirusa": {"pat": -15, "avl": 0, "fin": 0, "comp": -20}}}}}
     },
-    # (Poniżej skopiowane pozostałe warianty dla kompletności, struktura danych pozostaje bez zmian)
     "Wariant B: Atak na urządzenia medyczne IoT (3 Rundy)": {
         1: {"title": "🔴 FAZA OPERACYJNA: ETAP 1 - UTRATA SYNCHRONIZACJI APARATURY", "desc": "Godzina 03:00. OiTM. Kardiomonitory nagle tracą łączność z centralą. Dwie pompy infuzyjne zaczynają emitować fałszywe alarmy.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Natychmiastowe odcięcie sieci Wi-Fi dla urządzeń IoT": {"pat": +10, "avl": -20, "fin": -5, "comp": +5}, "Zdalny restart centrali (utrzymanie sieci)": {"pat": -15, "avl": +10, "fin": 0, "comp": -10}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Przejście na manualne monitorowanie (100% obłożenia)": {"pat": +25, "avl": 0, "fin": -10, "comp": +10}, "Zignorowanie anomalii jako usterki sprzętu": {"pat": -40, "avl": 0, "fin": 0, "comp": -30}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Skierowanie dodatkowego personelu na OiTM": {"pat": +20, "avl": 0, "fin": -15, "comp": 0}, "Czekanie na raport z porannej zmiany": {"pat": -20, "avl": 0, "fin": 0, "comp": -10}}}}},
         2: {"title": "🔴 FAZA OPERACYJNA: ETAP 2 - SZANTAŻ NA ŻYCIU PACJENTÓW", "desc": "Godzina 05:00. Hakerzy grożą zdalną zmianą dawek leków w pompach infuzyjnych, jeśli nie zostanie wpłacony okup w ciągu 2 godzin.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Fizyczne wyciągnięcie kabli zasilających routery (Air-Gap)": {"pat": +20, "avl": -30, "fin": -5, "comp": +15}, "Próba lokalizacji złośliwego oprogramowania w sieci": {"pat": -30, "avl": -5, "fin": 0, "comp": -20}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Odłączenie pomp i podawanie leków manualnie": {"pat": +25, "avl": -10, "fin": -5, "comp": +10}, "Ewakuacja całego OiTM do innego szpitala": {"pat": -15, "avl": -20, "fin": -30, "comp": +5}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Zgłoszenie incydentu do CSIRT GOV w trybie pilnym": {"pat": 0, "avl": 0, "fin": 0, "comp": +30}, "Zatajenie ataku i próba samodzielnej negocjacji": {"pat": -10, "avl": 0, "fin": -30, "comp": -40}}}}},
@@ -223,15 +127,15 @@ ALL_SCENARIOS = {
     },
     "Wariant D: Niewidzialny Zabójca (Zatrucie Danych - 4 Rundy)": {
          1: {"title": "🔴 FAZA OPERACYJNA: ETAP 1 - PODEJRZANY BŁĄD DANYCH", "desc": "Wtorek, 11:00. Pielęgniarka wstrzymuje transfuzję - system pokazuje złą grupę krwi. Z bazy zniknęła informacja o śmiertelnej alergii pacjenta. Systemy działają płynnie.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Zablokowanie edycji w bazie (Read-Only) i audyt logów": {"pat": +10, "avl": -10, "fin": -5, "comp": +10}, "Restart serwera aplikacyjnego (traktowanie jako błąd)": {"pat": -20, "avl": +5, "fin": 0, "comp": -10}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Wstrzymanie operacji do czasu weryfikacji krwi w laboratorium": {"pat": +25, "avl": 0, "fin": -15, "comp": +10}, "Kontynuowanie zabiegów, nakaz 'podwójnego sprawdzania'": {"pat": -30, "avl": 0, "fin": +5, "comp": -20}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Poufne zgłoszenie na Policję (podejrzenie sabotażu)": {"pat": 0, "avl": 0, "fin": 0, "comp": +20}, "Czekanie na wewnętrzne wyjaśnienie sprawy": {"pat": 0, "avl": 0, "fin": +5, "comp": -15}}}}},
-         2: {"title": "🔴 FAZA OPERACYJNA: ETAP 2 - EPIDEMIA NIEUFNOŚCI", "desc": "Wtorek, 16:00. Ktoś z uprawnieniami modyfikował setki wyników i dawek. Lekarze odmawiają podawania leków. Haker żąda 1 mln zł za listę zmienionych rekordów.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Przywrócenie bazy z backupu (utrata wpisów z ostatnich 48h)": {"pat": +10, "avl": -20, "fin": -10, "comp": +15}, "Próba ręcznego wyśledzenia złośliwych modyfikacji": {"pat": -25, "avl": +10, "fin": 0, "comp": -20}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Masowe ponowne pobieranie krwi (gigantyczne koszty)": {"pat": +25, "avl": -10, "fin": -25, "comp": +10}, "Poleganie na starych, papierowych wydrukach z biurek": {"pat": -10, "avl": +5, "fin": +5, "comp": -10}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Transparentne powiadomienie MZ i pacjentów": {"pat": +10, "avl": 0, "fin": -25, "comp": +30}, "Zatajenie manipulacji jako 'awarii technicznej'": {"pat": -10, "avl": 0, "fin": +10, "comp": -40}}}}},
+         2: {"title": "🔴 FAZA OPERACYJNA: ETAP 2 - EPIDEMIA NIEUFNOŚCI", "desc": "Wtorek, 16:00. Ktoś modyfikował setki wyników i dawek. Lekarze odmawiają podawania leków. Haker żąda 1 mln zł za listę zmienionych rekordów.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Przywrócenie bazy z backupu (utrata wpisów z ostatnich 48h)": {"pat": +10, "avl": -20, "fin": -10, "comp": +15}, "Próba ręcznego wyśledzenia złośliwych modyfikacji": {"pat": -25, "avl": +10, "fin": 0, "comp": -20}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Masowe ponowne pobieranie krwi (gigantyczne koszty)": {"pat": +25, "avl": -10, "fin": -25, "comp": +10}, "Poleganie na starych, papierowych wydrukach z biurek": {"pat": -10, "avl": +5, "fin": +5, "comp": -10}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Transparentne powiadomienie MZ i pacjentów": {"pat": +10, "avl": 0, "fin": -25, "comp": +30}, "Zatajenie manipulacji jako 'awarii technicznej'": {"pat": -10, "avl": 0, "fin": +10, "comp": -40}}}}},
          3: {"title": "🔴 FAZA OPERACYJNA: ETAP 3 - KRET CZY PRZEJĘTE KONTO?", "desc": "Środa, 10:00. Służby informują o użyciu danych logowania ordynatora (brak 2FA, ofiara phishingu). Sprawa wypływa w mediach.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Wymuszone natychmiastowe wdrożenie MFA (SMS) dla wszystkich": {"pat": +10, "avl": -15, "fin": -10, "comp": +25}, "Tylko masowy reset haseł na silniejsze": {"pat": -15, "avl": +10, "fin": +5, "comp": -15}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Szkolenie z cyberhigieny dla personelu (opóźnienia na izbie)": {"pat": +15, "avl": -10, "fin": -10, "comp": +15}, "Zostawienie personelu na stanowiskach, instrukcje mailem": {"pat": -10, "avl": +15, "fin": +5, "comp": -20}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Ochrona oszukanego ordynatora, nacisk na naprawę procesów": {"pat": 0, "avl": 0, "fin": 0, "comp": +15}, "Zwolnienie ordynatora, zrzucenie winy": {"pat": -5, "avl": 0, "fin": +10, "comp": -15}}}}},
-         4: {"title": "🔴 FAZA OPERACYJNA: ETAP 4 - ROZLICZENIE Z ZAUFANIA", "desc": "Czwartek, 12:00. Kryzys opanowany, ale pacjenci wytaczają pozwy zbiorowe o podanie niewłaściwych leków. Nadzór oczekuje wniosków.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Wdrożenie systemu DLP i zaawansowanego monitorowania logów": {"pat": +15, "avl": +5, "fin": -25, "comp": +20}, "Brak większych zmian strukturalnych": {"pat": -20, "avl": +10, "fin": +15, "comp": -30}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Darmowe badania kontrolne dla pacjentów ze zmanipulowanej puli": {"pat": +25, "avl": -5, "fin": -30, "comp": +15}, "Oczekiwanie na pozwy, brak działań proaktywnych": {"pat": -10, "avl": +5, "fin": +10, "comp": -20}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Powołanie oficera ds. integralności danych klinicznych": {"pat": +10, "avl": 0, "fin": -10, "comp": +15}, "Wydatkowanie budżetu naprawczego na kampanię PR": {"pat": -10, "avl": 0, "fin": -15, "comp": -20}}}}}
+         4: {"title": "🔴 FAZA OPERACYJNA: ETAP 4 - ROZLICZENIE Z ZAUFANIA", "desc": "Czwartek, 12:00. Kryzys opanowany, dane odtworzone. Szpital stoi przed pozwami zbiorowymi od pacjentów, którym podano złe leki.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Wdrożenie systemu DLP i zaawansowanego monitorowania logów": {"pat": +15, "avl": +5, "fin": -25, "comp": +20}, "Brak większych zmian strukturalnych": {"pat": -20, "avl": +10, "fin": +15, "comp": -30}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Darmowe badania kontrolne dla pacjentów ze zmanipulowanej puli": {"pat": +25, "avl": -5, "fin": -30, "comp": +15}, "Oczekiwanie na pozwy, brak działań proaktywnych": {"pat": -10, "avl": +5, "fin": +10, "comp": -20}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Powołanie oficera ds. integralności danych klinicznych": {"pat": +10, "avl": 0, "fin": -10, "comp": +15}, "Wydatkowanie budżetu naprawczego na kampanię PR": {"pat": -10, "avl": 0, "fin": -15, "comp": -20}}}}}
     },
     "Wariant E: Przerwany Łańcuch (Atak na Telemedycynę - 4 Rundy)": {
-         1: {"title": "🔴 FAZA OPERACYJNA: ETAP 1 - PARALIŻ ZEWNĘTRZNY", "desc": "Środa, 18:00. Padła zewnętrzna chmura dla radiologii zdalnej i platforma tele-monitoringu pacjentów kardiologicznych. Awaria po stronie dostawcy.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Natychmiastowe zerwanie VPN z chmurą dostawcy (Air-Gap)": {"pat": 0, "avl": -20, "fin": -5, "comp": +15}, "Utrzymanie aktywnych połączeń API w oczekiwaniu na naprawę": {"pat": -15, "avl": +5, "fin": 0, "comp": -20}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Wezwanie lokalnych radiologów na nadgodziny do szpitala": {"pat": +20, "avl": +10, "fin": -25, "comp": +5}, "Wstrzymanie opisów planowych, diagnostyka tylko na ratunek życia": {"pat": -15, "avl": -10, "fin": +10, "comp": -5}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Wdrożenie papierowych procedur dla pacjentów z telemonitoringu": {"pat": +15, "avl": 0, "fin": -10, "comp": +10}, "Uznanie to za awarię techniczną dostawcy, brak aktywacji BCP": {"pat": -20, "avl": 0, "fin": +5, "comp": -15}}}}},
-         2: {"title": "🔴 FAZA OPERACYJNA: ETAP 2 - ZARAZA PO ŁĄCZACH", "desc": "Środa, 22:00. Dostawca informuje o zainfekowaniu wirusem replikującym się przez API. Wyciekły dane telemetryczne pacjentów kardiologicznych.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Odcięcie całego szpitala od sieci Internet w celu skanowania": {"pat": -10, "avl": -30, "fin": -15, "comp": +25}, "Bieżąca aktualizacja antywirusa i blokowanie IP dostawcy": {"pat": -25, "avl": +15, "fin": 0, "comp": -20}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Wysłanie karetek po pacjentów kardiologicznych wysokiego ryzyka": {"pat": +30, "avl": 0, "fin": -30, "comp": +10}, "Wysłanie SMS-ów do pacjentów z prośbą o zgłaszanie złego samopoczucia": {"pat": -30, "avl": 0, "fin": +10, "comp": -15}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Zgłoszenie do UODO wycieku, przyjęcie roli administratora danych": {"pat": +10, "avl": 0, "fin": -5, "comp": +30}, "Przerzucanie odpowiedzialności na dostawcę, brak zgłoszeń do UODO": {"pat": 0, "avl": 0, "fin": 0, "comp": -35}}}}},
-         3: {"title": "🔴 FAZA OPERACYJNA: ETAP 3 - ODPOWIEDZIALNOŚĆ STRON", "desc": "Czwartek, 08:00. Ostra krytyka w mediach dotycząca cięcia kosztów na cyberbezpieczeństwie. Wąskie gardła w radiologii paraliżują placówkę.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Wymóg audytów bezpieczeństwa TLPT od nowego dostawcy chmury": {"pat": +10, "avl": -10, "fin": -15, "comp": +25}, "Podpisanie najtańszej umowy bez audytu celem szybkiego powrotu usług": {"pat": -20, "avl": +25, "fin": +15, "comp": -30}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Osobiste, telefoniczne uspokajanie pacjentów kardiologicznych przez lekarzy": {"pat": +25, "avl": -5, "fin": -15, "comp": +15}, "Wydanie ogólnego oświadczenia na stronie www szpitala": {"pat": -15, "avl": 0, "fin": +5, "comp": -15}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Pozew sądowy o odszkodowanie i rozwiązanie umowy z dostawcą": {"pat": +5, "avl": 0, "fin": +10, "comp": +15}, "Kontynuacja umowy przy rekompensacie 'darmowego roku'": {"pat": -25, "avl": +10, "fin": +25, "comp": -25}}}}},
-         4: {"title": "🔴 FAZA OPERACYJNA: ETAP 4 - NOWA ARCHITEKTURA", "desc": "Piątek. Konieczność przedstawienia Ministerstwu Zdrowia planu zarządzania ryzykiem łańcucha dostaw.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Strategia Multi-Cloud (wielu dostawców) z systemem Failover": {"pat": +15, "avl": +20, "fin": -35, "comp": +20}, "Wycofanie się do technologii lokalnej (serwery szpitalne)": {"pat": -10, "avl": -15, "fin": -10, "comp": -10}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Fizyczne plany awaryjne (BCP) dla wdrażanej aparatury cyfrowej": {"pat": +20, "avl": 0, "fin": -10, "comp": +20}, "Redukcja aparatury analogowej dla cięcia kosztów": {"pat": -25, "avl": +10, "fin": +20, "comp": -25}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Powołanie Działu Zarządzania Ryzykiem Stron Trzecich (wymóg DORA/NIS2)": {"pat": +15, "avl": 0, "fin": -15, "comp": +25}, "Weryfikacja bezpieczeństwa vendora wyłącznie przez Dział Zakupów": {"pat": -20, "avl": 0, "fin": +15, "comp": -30}}}}}
+         1: {"title": "🔴 FAZA OPERACYJNA: ETAP 1 - PARALIŻ ZEWNĘTRZNY", "desc": "Środa, 18:00. Padła zewnętrzna chmura radiologiczna i platforma tele-monitoringu kardiologicznego. Awaria po stronie dostawcy.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Natychmiastowe zerwanie VPN z chmurą dostawcy (Air-Gap)": {"pat": 0, "avl": -20, "fin": -5, "comp": +15}, "Utrzymanie aktywnych połączeń API w oczekiwaniu na naprawę": {"pat": -15, "avl": +5, "fin": 0, "comp": -20}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Wezwanie lokalnych radiologów na nadgodziny do szpitala": {"pat": +20, "avl": +10, "fin": -25, "comp": +5}, "Wstrzymanie opisów planowych, diagnostyka tylko na ratunek": {"pat": -15, "avl": -10, "fin": +10, "comp": -5}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Wdrożenie papierowych procedur dla pacjentów z telemonitoringu": {"pat": +15, "avl": 0, "fin": -10, "comp": +10}, "Uznanie to za awarię techniczną dostawcy, brak aktywacji BCP": {"pat": -20, "avl": 0, "fin": +5, "comp": -15}}}}},
+         2: {"title": "🔴 FAZA OPERACYJNA: ETAP 2 - ZARAZA PO ŁĄCZACH", "desc": "Środa, 22:00. Dostawca padł ofiarą wirusa replikującego się przez API. Wirus puka do waszych serwerów. Wyciekły dane telemetryczne.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Odcięcie całego szpitala od sieci Internet w celu skanowania": {"pat": -10, "avl": -30, "fin": -15, "comp": +25}, "Bieżąca aktualizacja antywirusa i blokowanie IP dostawcy": {"pat": -25, "avl": +15, "fin": 0, "comp": -20}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Wysłanie karetek po pacjentów kardiologicznych wysokiego ryzyka": {"pat": +30, "avl": 0, "fin": -30, "comp": +10}, "Wysłanie SMS-ów do pacjentów z prośbą o zgłaszanie złego stanu": {"pat": -30, "avl": 0, "fin": +10, "comp": -15}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Zgłoszenie do UODO wycieku, przyjęcie roli administratora danych": {"pat": +10, "avl": 0, "fin": -5, "comp": +30}, "Przerzucanie odpowiedzialności na dostawcę, brak zgłoszeń": {"pat": 0, "avl": 0, "fin": 0, "comp": -35}}}}},
+         3: {"title": "🔴 FAZA OPERACYJNA: ETAP 3 - ODPOWIEDZIALNOŚĆ STRON", "desc": "Czwartek, 08:00. Ostra krytyka w mediach dotycząca cięcia kosztów bezpieczeństwa. Wąskie gardła w radiologii paraliżują placówkę.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Wymóg audytów bezpieczeństwa TLPT od nowego dostawcy": {"pat": +10, "avl": -10, "fin": -15, "comp": +25}, "Podpisanie najtańszej umowy bez audytu celem szybkiego powrotu": {"pat": -20, "avl": +25, "fin": +15, "comp": -30}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Osobiste, telefoniczne uspokajanie pacjentów przez lekarzy": {"pat": +25, "avl": -5, "fin": -15, "comp": +15}, "Wydanie ogólnego oświadczenia na stronie www szpitala": {"pat": -15, "avl": 0, "fin": +5, "comp": -15}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Pozew sądowy o odszkodowanie i rozwiązanie umowy z dostawcą": {"pat": +5, "avl": 0, "fin": +10, "comp": +15}, "Kontynuacja umowy przy rekompensacie 'darmowego roku'": {"pat": -25, "avl": +10, "fin": +25, "comp": -25}}}}},
+         4: {"title": "🔴 FAZA OPERACYJNA: ETAP 4 - NOWA ARCHITEKTURA", "desc": "Piątek. Konieczność przedstawienia Ministerstwu Zdrowia planu zarządzania ryzykiem. Zdarzenie uwidoczniło uzależnienie od jednej platformy.", "questions": {"IT": {"label": "ZESPÓŁ IT:", "options": {"Strategia Multi-Cloud (wielu dostawców) z systemem Failover": {"pat": +15, "avl": +20, "fin": -35, "comp": +20}, "Wycofanie się do technologii lokalnej (serwery szpitalne)": {"pat": -10, "avl": -15, "fin": -10, "comp": -10}}}, "Med": {"label": "PION MEDYCZNY:", "options": {"Fizyczne plany awaryjne (BCP) dla wdrażanej aparatury": {"pat": +20, "avl": 0, "fin": -10, "comp": +20}, "Redukcja aparatury analogowej dla cięcia kosztów": {"pat": -25, "avl": +10, "fin": +20, "comp": -25}}}, "Dir": {"label": "SZTAB ZARZĄDZAJĄCY:", "options": {"Powołanie Działu Zarządzania Ryzykiem Stron Trzecich (NIS2)": {"pat": +15, "avl": 0, "fin": -15, "comp": +25}, "Weryfikacja bezpieczeństwa vendora wyłącznie przez Dział Zakupów": {"pat": -20, "avl": 0, "fin": +15, "comp": -30}}}}}
     }
 }
 
@@ -239,7 +143,6 @@ ALL_SCENARIOS = {
 def calculate_score(team_name):
     pat, avl, fin, comp = 100, 100, 100, 100
     active_scenario_data = ALL_SCENARIOS[state["active_scenario"]]
-    
     for r in range(1, state["round"] + 1):
         if r in state["teams"][team_name]["decisions"] and r in active_scenario_data:
             for role, choice in state["teams"][team_name]["decisions"][r].items():
@@ -262,10 +165,7 @@ def get_status_text(val, is_critical=False):
 
 def render_kpi_card(icon, label, value, is_critical=False):
     status_text, status_class = get_status_text(value, is_critical)
-    # Procent wypełnienia paska
     pct = min((value/150)*100, 100)
-    
-    # Kolor paska
     bar_color = "#48BB78" if "green" in status_class else "#ECC94B" if "yellow" in status_class else "#F56565"
 
     html = f"""
@@ -300,7 +200,14 @@ def login_view():
                 st.error("Odmowa. Wprowadź identyfikator.")
         st.markdown("</div>", unsafe_allow_html=True)
         
-        st.write("<br><br>", unsafe_allow_html=True)
+        st.write("<br>", unsafe_allow_html=True)
+        
+        with st.expander("📱 Panel dla Prowadzącego: Wyświetl kod QR dla studentów"):
+            game_url = st.text_input("Wklej tutaj link do aplikacji (z paska adresu):")
+            if game_url:
+                qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={game_url}"
+                st.image(qr_url, caption="Zeskanuj, aby dołączyć do Sztabu")
+        
         with st.expander("🔑 Dostęp Poziomu Administratora (Dowództwo)"):
             admin_pass = st.text_input("Klucz szyfrujący:", type="password")
             if st.button("Uruchom Konsolę Dowodzenia"):
@@ -331,13 +238,15 @@ def admin_view():
                 for t in state["teams"]: state["teams"][t]["ready"] = False
                 st.rerun()
         else:
-            if st.button("Zakończ Symulację 🔄"):
+            if st.button("Zakończ Symulację i Zresetuj 🔄"):
                 state["round"] = 0
                 state["teams"] = {}
                 st.rerun()
                 
     with col2:
         st.write("### Gotowość Sztabów Lokalnych")
+        if not state["teams"]:
+            st.info("Brak podłączonych szpitali.")
         for t, data in state["teams"].items():
             status = "✅ Zatwierdzono" if data["ready"] else "⏳ Oczekiwanie na decyzje..."
             st.write(f"- **{t}**: {status}")
@@ -348,14 +257,14 @@ def admin_view():
         for t in state["teams"]:
             p, a, f, c = calculate_score(t)
             scores.append({"Placówka": t, "Pacjenci": p, "Systemy": a, "Finanse": f, "Zgodność": c})
+        # Wyświetlamy zwykłą tabelę (zapobiega błędom braku matplotlib w chmurze)
         st.dataframe(pd.DataFrame(scores), use_container_width=True)
 
 def team_view():
-    team = st.session_state["team_name"]
+    team = st.session_state.get("team_name")
     
     # --- ZABEZPIECZENIE PRZED RESETEM GRY (Naprawa KeyError) ---
-    if team not in state["teams"]:
-        # Jeśli Prowadzący zresetował grę, wyrzucamy gracza z powrotem do ekranu logowania
+    if not team or team not in state["teams"]:
         st.session_state.pop("role", None)
         st.session_state.pop("team_name", None)
         st.rerun()
@@ -364,7 +273,7 @@ def team_view():
     
     total_rounds = len(ALL_SCENARIOS[state["active_scenario"]])
     
-    # 1. Pasek Nagłówka (Top Bar)
+    # 1. Pasek Nagłówka
     colA, colB = st.columns([3, 1])
     with colA:
         st.markdown(f"<div style='font-size: 24px; font-weight: bold; color: #E2E8F0; padding-top: 5px;'>🏥 SZTAB KRYZYSOWY: {team.upper()}</div>", unsafe_allow_html=True)
@@ -374,9 +283,8 @@ def team_view():
             
     st.write("<br>", unsafe_allow_html=True)
     
-    # 2. Wskaźniki Krytyczne (KPI Cards)
+    # 2. Wskaźniki Krytyczne
     p, a, f, c = calculate_score(team)
-    
     kpi_html = f"""
     <div class="kpi-container">
         {render_kpi_card("❤️", "PACJENCI", p, is_critical=True)}
@@ -396,11 +304,9 @@ def team_view():
         r = state["round"]
         scenario = ALL_SCENARIOS[state["active_scenario"]][r]
         
-        # Sekcja Sytuacyjna
         st.markdown(f"<div class='sitrep-box'><div class='sitrep-title'>{scenario['title']}</div><span style='color: #E2E8F0;'>{scenario['desc']}</span></div>", unsafe_allow_html=True)
         st.markdown("<div class='alert-box'><div class='alert-title'>⚠️ KANAŁ ALERTÓW:</div>Oczekuję na wytyczne Dowództwa. Konieczne podjęcie skoordynowanych akcji.</div>", unsafe_allow_html=True)
         
-        # Sekcja Decyzyjna
         st.markdown("<div class='decision-header'>⚡ WYMAGANE DECYZJE SZTABU</div>", unsafe_allow_html=True)
         
         if state["teams"][team]["ready"]:
@@ -408,7 +314,6 @@ def team_view():
         else:
             with st.form(f"form_r{r}"):
                 choices = {}
-                # Wyświetlamy decyzje jako bloki
                 for role, q_data in scenario["questions"].items():
                     st.markdown(f"<span style='color: #63B3ED; font-weight: bold;'>{q_data['label']}</span>", unsafe_allow_html=True)
                     choices[role] = st.radio(f"Wybór {role}", list(q_data["options"].keys()), label_visibility="collapsed")
@@ -422,13 +327,29 @@ def team_view():
                     st.rerun()
 
     elif state["round"] > total_rounds:
-        st.markdown("<div class='sitrep-box' style='border-left: 5px solid #48BB78;'><div class='sitrep-title' style='color: #48BB78;'>🟢 FAZA OPERACYJNA: ZAKOŃCZONO</div><span style='color: #E2E8F0;'>Stan wyjątkowy odwołany. Rozpoczyna się faza audytu pokontrolnego.</span></div>", unsafe_allow_html=True)
+        st.markdown("<div class='sitrep-box' style='border-left: 5px solid #48BB78;'><div class='sitrep-title' style='color: #48BB78;'>🟢 FAZA OPERACYJNA: ZAKOŃCZONO</div><span style='color: #E2E8F0;'>Stan wyjątkowy odwołany. Rozpoczyna się faza audytu pokontrolnego. Poniżej globalne zestawienie.</span></div>", unsafe_allow_html=True)
         
-        st.markdown("<div class='decision-header'>📋 WYNIK AUDYTU ORGANÓW NADZORCZYCH</div>", unsafe_allow_html=True)
+        # Generowanie rankingu globalnego
+        st.markdown("<div class='decision-header'>🏆 GLOBALNY RANKING SZPITALI (WYNIK AUDYTU)</div>", unsafe_allow_html=True)
+        ranking_data = []
+        for t_name in state["teams"]:
+            tp, ta, tf, tc = calculate_score(t_name)
+            total_score = tp + ta + tf + tc
+            ranking_data.append({"Placówka": t_name, "Suma PKT": total_score, "Pacjenci": tp, "Systemy": ta, "Finanse": tf, "Zgodność": tc})
+            
+        df_ranking = pd.DataFrame(ranking_data)
+        if not df_ranking.empty:
+            df_ranking = df_ranking.sort_values(by=["Suma PKT", "Pacjenci"], ascending=[False, False]).reset_index(drop=True)
+            df_ranking.index = df_ranking.index + 1 
+            st.dataframe(df_ranking, use_container_width=True)
+        
+        st.write("---")
+        st.markdown(f"### Raport Indywidualny: {team.upper()}")
+        
         if p < 50:
-            st.error("Wyrok Prokuratora: ZAGROŻENIE ŻYCIA PACJENTÓW. Oczekuj aktu oskarżenia.")
+            st.error("Wyrok Prokuratora: ZAGROŻENIE ŻYCIA PACJENTÓW. Oczekuj aktu oskarżenia. (Poniżej 50 pkt)")
         elif c < 50:
-            st.error("Wyrok Regulatora: KATASTROFA PRAWNA. Nałożono maksymalne kary finansowe (RODO/NIS2).")
+            st.error("Wyrok Regulatora: KATASTROFA PRAWNA. Nałożono maksymalne kary finansowe. (Poniżej 50 pkt)")
         elif p >= 80 and c >= 80:
             st.success("Wyrok: MISTRZOWSKIE ZARZĄDZANIE KRYZYSEM. Infrastruktura i pacjenci zabezpieczeni.")
         else:
