@@ -352,6 +352,16 @@ def admin_view():
 
 def team_view():
     team = st.session_state["team_name"]
+    
+    # --- ZABEZPIECZENIE PRZED RESETEM GRY (Naprawa KeyError) ---
+    if team not in state["teams"]:
+        # Jeśli Prowadzący zresetował grę, wyrzucamy gracza z powrotem do ekranu logowania
+        st.session_state.pop("role", None)
+        st.session_state.pop("team_name", None)
+        st.rerun()
+        return
+    # -----------------------------------------------------------
+    
     total_rounds = len(ALL_SCENARIOS[state["active_scenario"]])
     
     # 1. Pasek Nagłówka (Top Bar)
@@ -398,7 +408,7 @@ def team_view():
         else:
             with st.form(f"form_r{r}"):
                 choices = {}
-                # Wyświetlamy decyzje jako bloki, a nie ciasne listy
+                # Wyświetlamy decyzje jako bloki
                 for role, q_data in scenario["questions"].items():
                     st.markdown(f"<span style='color: #63B3ED; font-weight: bold;'>{q_data['label']}</span>", unsafe_allow_html=True)
                     choices[role] = st.radio(f"Wybór {role}", list(q_data["options"].keys()), label_visibility="collapsed")
